@@ -8,20 +8,14 @@
 "platforms": [{
   "platform": "HomeAssistant",
   "name": "HomeAssistant",
-<<<<<<< HEAD
-  "host": "",
+
+	"host": "",
   "username": "",
-  "password": "#",
-=======
-  "host": "http://127.0.0.1:8123",
-  "username": "",
-  "password": "yourapipassword",
->>>>>>> 4d641c204b3599d29acefbd84e4d895da5969bda
+  "password": "",
   "supported_types": ["automation", "binary_sensor", "climate", "cover", "device_tracker", "fan", "group", "input_boolean", "light", "lock", "media_player", "remote", "scene", "script", "sensor", "switch", "vacuum"],
   "default_visibility": "hidden",
   "logging": true,
   "verify_ssl": true
-<<<<<<< HEAD
 },{
 	"platform": "cmdSwitch2",
 	"name": " CMD switch",
@@ -67,7 +61,4 @@
 		}
 	}
 ]
-=======
-}]
->>>>>>> 4d641c204b3599d29acefbd84e4d895da5969bda
 }
