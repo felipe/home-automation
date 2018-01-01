@@ -2,7 +2,7 @@ homeassistant:
   name: Home
   latitude: !secret latitude
   longitude: !secret longitude
-  elevation: 1624
+  elevation: !secret elevation
   unit_system: imperial
   time_zone: America/Denver
   customize: !include customize.yaml
