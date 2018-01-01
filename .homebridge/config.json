@@ -8,12 +8,56 @@
 "platforms": [{
   "platform": "HomeAssistant",
   "name": "HomeAssistant",
-  "host": "http://127.0.0.1:8123",
+  "host": "",
   "username": "",
-  "password": "yourapipassword",
+  "password": "#",
   "supported_types": ["automation", "binary_sensor", "climate", "cover", "device_tracker", "fan", "group", "input_boolean", "light", "lock", "media_player", "remote", "scene", "script", "sensor", "switch", "vacuum"],
   "default_visibility": "hidden",
   "logging": true,
   "verify_ssl": true
-}]
+},{
+	"platform": "cmdSwitch2",
+	"name": " CMD switch",
+	"switches": [{
+			"name": "Felipe isHome",
+			"on_cmd": "sudo rm -r /presence/F_home; sudo mkdir /presence/F_home",
+			"off_cmd": "sudo rm -r /presence/F_home",
+			"state_cmd": "ls /presence | grep -i 'F_home'",
+			"polling": "true"
+		},{
+				"name": "Carly isHome",
+				"on_cmd": "sudo rm -r /presence/C_home; sudo mkdir /presence/C_home",
+				"off_cmd": "sudo rm -r /presence/C_home",
+				"state_cmd": "ls /presence | grep -i 'C_home'",
+				"polling": "true"
+			},{
+					"name": "Dulce isHome",
+					"on_cmd": "sudo rm -r /presence/D_home; sudo mkdir /presence/D_home",
+					"off_cmd": "sudo rm -r /presence/D_home",
+					"state_cmd": "ls /presence | grep -i 'D_home'",
+					"polling": "true"
+				}]
+},{
+    "platform": "TplinkSmarthome",
+    "name": "TplinkSmarthome"
+}
+],
+"accessories": [
+	{
+		"accessory": "Roomba690",
+		"model":"",
+		"name": "",
+		"hostname": "172.16.1.2",
+		"blid":"",
+		"password":""
+	},
+	{
+		"accessory": "Abode",
+		"name": "Abode",
+		"abode": {
+			"username": "",
+			"password": ""
+		}
+	}
+]
 }

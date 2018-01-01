@@ -12,13 +12,21 @@ frontend:
 #introduction:
 config:
 discovery:
+  ignore:
+    - apple_tv
 history:
 logbook:
 map:
 http:
-  #api_password: !secret http_password
-  # Uncomment this if you are using SSL/TLS, running in Docker container, etc.
-  #base_url: example.duckdns.org:8123
+  api_password: !secret http_password
+  ssl_certificate: !secret ssl_cert
+  ssl_key: !secret ssl_key
+  trusted_networks:
+    - 127.0.0.1
+    - ::1
+    - 172.16.0.0/24
+  ip_ban_enabled: True
+  login_attempts_threshold: 5
 
 sun:
 updater:
@@ -30,17 +38,60 @@ media_player:
   - platform: ps4
     host: 172.16.1.167
 
+apple_tv:
+  - name: Living Room tv
+    host: 172.16.1.121
+    login_id: !secret living_room_login_id
+    start_off: false
+  - name: Media Room tv
+    host: 172.16.1.149
+    login_id: !secret media_room_login_id
+    start_off: false
+
+switch:
+  - platform: tplink
+    host: 172.16.1.7
+    name: His Bedside Table
+
 sensor:
   - platform: darksky
     api_key: !secret darksky_key
     monitored_conditions:
         - icon
         - nearest_storm_distance
-  
+
   - platform: speedtest
     monitored_conditions:
         - download
         - upload
+
+abode:
+  username: !secret abode_username
+  password: !secret abode_password
+  name: Abode Alarm System
+  polling: False
+  exclude:
+    - 'RF:0095a700'
+
+binary_sensor:
+  - platform: command_line
+    command: 'ls /presence/ | grep -i "F_home" | wc -l'
+    name: !secret F_name
+    payload_on: 1
+    payload_off: 0
+    scan_interval: 30
+  - platform: command_line
+    command: 'ls /presence/ | grep -i "C_home" | wc -l'
+    name: !secret C_name
+    payload_on: 1
+    payload_off: 0
+    scan_interval: 30
+  - platform: command_line
+    command: 'ls /presence/ | grep -i "D_home" | wc -l'
+    name: !secret D_name
+    payload_on: 1
+    payload_off: 0
+    scan_interval: 30
 
 # Text to speech
 tts:
