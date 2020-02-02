@@ -42,17 +42,19 @@ docker run \
 
 **Normalizing Mode Names**
 
-_HomeKit_ | _Abode_      | _Arlo_
-----------|--------------|----------
-Home      | Home         | Home
-Away      | Away         | Armed
-Night     | n/a - _Home_ | Night
-Off       | Standby      | Disarmed
+_HomeKit_   | _Abode_      | _Arlo_
+------------|--------------|----------
+Home / Stay | Home         | Home
+Away        | Away         | Armed
+Night       | n/a - _Home_ | Night
+Off         | Standby      | Disarmed
 
 _Items in italics are the current mapping, but it can be changed_
 
 ### Abode
 
+Enables accessing the system modes. Currently there is no way to create new modes in Abode, so `Night` mode is the same as `Home` Mode.
+
 ### Arlo
 
-Enables accessing modes other than `Armed` and `Disarmed`. Currently there is a `Home` mode, but `Night` mode has not been configured, which maps it to `Armed`.
+Enables accessing modes other than `Armed` and `Disarmed`. I have created a `Home` mode (which in the Homekit API is also referred to as `stay`), and a `Night` mode.
