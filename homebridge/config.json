@@ -14,12 +14,17 @@
     }
   }],
   "platforms": [{
-    "platform": "Arlo",
-    "name": "Arlo",
-    "email": "",
-    "password": "",
-    "interval": 6000,
-    "stay_arm": "mode2",
-    "night_arm": "mode3"
-  }]
+      "platform": "Arlo",
+      "name": "Arlo",
+      "email": "",
+      "password": "",
+      "interval": 6000,
+      "stay_arm": "mode2",
+      "night_arm": "mode3"
+    },
+    {
+      "platform": "TplinkSmarthome",
+      "name": "TplinkSmarthome"
+    }
+  ]
 }
