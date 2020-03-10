@@ -29,9 +29,10 @@ Device metrics are sent to DataDog for reporting and alerting. DataDog is set up
 ```
 docker run \
   -d --restart unless-stopped \
-  --name dd-agent
+  --name dd-agent \
+  --net=host \
   -h 'hostname' \
-  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v /var/run/docker.sock:/var/run/docker.sock:ro \
   -v /proc/:/host/proc/:ro \
   -v /sys/fs/cgroup/:/host/sys/fs/cgroup:ro \
   -e API_KEY=DATADOG_API_KEY \
