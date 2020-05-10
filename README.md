@@ -39,7 +39,7 @@ docker run \
   benevolentcoders/rpi-datadog-agent
 ```
 
-## Home Bridge
+## Homebridge
 
 Homebridge is set up through a [Docker Image](https://github.com/oznu/docker-homebridge/wiki/Homebridge-on-Raspberry-Pi).
 
@@ -73,3 +73,17 @@ Enables accessing the system modes. Currently there is no way to create new mode
 ### Arlo
 
 Enables accessing modes other than `Armed` and `Disarmed`. I have created a `Home` mode (which in the Homekit API is also referred to as `stay`), and a `Night` mode.
+
+## WIP: Mosquitto
+
+```
+docker run \
+  --restart=always \
+  --name=mqtt \
+  --net=host \
+  -tid \
+  -v ~/mqtt/config:/mqtt/config:ro \
+  -v ~/mqtt/log:/mqtt/log \
+  -v ~/mqtt/data/:/mqtt/data/ \
+  toke/mosquitto
+```
