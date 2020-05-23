@@ -14,10 +14,10 @@ To access the host OS you need to add an `authorized_keys` files in the root of 
 
 ### Service Logs
 
-The original configuration corrupted the SD card due to some power failures and too many writes. I have moved the log configuration to memory, which will clear on reboot, but should be fine.
+The original configuration corrupted the SD card due to some power failures and too many writes. I have moved the log configuration to memory, which will clear on reboot, but should be fine. This is done inside the hassio docker image.
 
 ```
-sudo nano /etc/fstab
+vi /etc/fstab
 tmpfs  /tmp tmpfs  defaults,noatime 0  0
 tmpfs  /var/log tmpfs  defaults,noatime,nosuid,mode=0755,size=100m  0  0
 ```
