@@ -1,30 +1,69 @@
 {
-  "bridge": {
-    "name": "Homebridge",
-    "username": "0E:D9:A0:46:94:4A",
-    "port": 51093,
-    "pin": "031-45-154"
-  },
-  "accessories": [{
-    "accessory": "Abode",
-    "name": "Abode",
-    "abode": {
-      "username": "",
-      "password": ""
-    }
-  }],
-  "platforms": [{
-      "platform": "Arlo",
-      "name": "Arlo",
-      "email": "",
-      "password": "",
-      "interval": 6000,
-      "stay_arm": "mode2",
-      "night_arm": "mode3"
+    "bridge": {
+        "name": "Homebridge",
+        "username": "0E:D9:A0:46:94:4A",
+        "port": 51093,
+        "pin": "031-45-154"
     },
-    {
-      "platform": "TplinkSmarthome",
-      "name": "TplinkSmarthome"
-    }
-  ]
+    "accessories": [
+        {
+            "accessory": "Abode",
+            "name": "Abode",
+            "abode": {
+                "username": "",
+                "password": ""
+            }
+        }
+    ],
+    "platforms": [
+        {
+            "name": "Config",
+            "port": 8080,
+            "auth": "form",
+            "theme": "blue-grey",
+            "tempUnits": "f",
+            "lang": "auto",
+            "platform": "config"
+        },
+        {
+            "platform": "Arlo",
+            "name": "Arlo",
+            "email": "",
+            "password": "",
+            "interval": 6000,
+            "stay_arm": "mode2",
+            "night_arm": "mode3"
+        },
+        {
+            "name": "TplinkSmarthome",
+            "platform": "TplinkSmarthome"
+        },
+        {
+            "units": "us",
+            "interval": 5,
+            "stations": [
+                {
+                    "service": "openweathermap",
+                    "key": "",
+                    "locationGeo": [],
+                    "locationCity": "",
+                    "language": "en",
+                    "compatibility": "both",
+                    "conditionCategory": "simple",
+                    "now": true,
+                    "extraHumidity": true,
+                    "hidden": [
+                        "Air Pressure",
+                        "Dew Point",
+                        "Sunrise Time",
+                        "Sunset Time",
+                        "UV Index",
+                        "Visibility",
+                        "Wind Speed Max"
+                    ]
+                }
+            ],
+            "platform": "WeatherPlus"
+        }
+    ]
 }
