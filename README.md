@@ -14,17 +14,55 @@ The each node is using [Raspberry Pi OS Lite](https://www.raspberrypi.org/softwa
 
 ## Setup
 
+## microSD Card
+
+ 1. Install Raspberry Pi OS Lite on each card. [download](https://www.raspberrypi.org/software/operating-systems/)
+ 1. In the card root directory run the following to enable SSH.
+     ```$ touch ssh```
+ 1. Install microSD card on each Pi node.
+ 1. Boot all Pi nodes.
+ 1. Find and note DHCP provided IP addresses
+     - Rpi3: ```$ arp -na | grep -i b8:27:eb``` 
+
 ## OS
 
- 1. Install Raspberry Pi OS Lite on each microSD card. [download](https://www.raspberrypi.org/software/operating-systems/)
- 1. In the microSD card root run the following to enable SSH.
- 
-     ```$ touch ssh```
-
- 1. Install microSD card on each Pi.
+ 1. Update the `nodes` file with the IP addresses of each
+ 1. Copy keys for password-less ssh
+    - ```$ brew install ssh-copy-id```
+    - ```$ ssh-copy-id pi@x.x.x.x```
+ 1. Update OS packages
+     ```$ sudo apt update```
  1. Disable `wlan0`
-     ```$ ifconfig wlan0 down```
- 1. Set static IP on `eth0`
+     ```$ sudo ifconfig wlan0 down```
+ 1. Set cmd items add the following line to `/boot/cmdline.txt`
+    ```cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory```
+ 1. Set static IP on `eth0` by appending the correct code to `/etc/dhcpcd.conf`. Different IPs per node.
+     ```
+     interface eth0
+     arping 192.168.1.1
+     fallback other     
+     
+     profile 192.168.1.1
+     static ip_address=192.168.1.100/24
+     static routers=192.168.1.1
+     static domain_name_servers=1.1.1.1
+     
+     profile other
+     static ip_address=192.168.1.100/24
+     ```
+ 1. Change the hostname to `kube-*` by modifying:
+   - `/etc/hosts`
+   - `/etc/hostname`
+
+ 1. Reboot `sudo reboot -n`
+
+### Primary Node
+
+ 1. Install k3s
+     ```$ curl -sfL https://get.k3s.io | sh -```
+
+### Worker Node
+ 
 
 ## Home Assistant
 
