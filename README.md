@@ -16,10 +16,14 @@ The each node is using [Raspberry Pi OS Lite](https://www.raspberrypi.org/softwa
 
 ## OS
 
- 1. Install Raspberry Pi OS Lite on each microSD card. (download)[https://www.raspberrypi.org/software/operating-systems/]
+ 1. Install Raspberry Pi OS Lite on each microSD card. [download](https://www.raspberrypi.org/software/operating-systems/)
  1. In the microSD card root run the following to enable SSH.
+ 
      ```$ touch ssh```
+
+ 1. Install microSD card on each Pi.
  1. Disable `wlan0`
+     ```$ ifconfig wlan0 down```
  1. Set static IP on `eth0`
 
 ## Home Assistant
