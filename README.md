@@ -1,14 +1,26 @@
 # Home Automation
 
-This is where I am keeping the configuration of my Raspberry Pi running Home Assistant and Home Bridge.
+This is where I am keeping the configuration of my Raspberry Pi (Cluster) running Home Assistant and Home Bridge through Kubernetes.
 
 The overall idea is to manage everything though the individual services themselves, but have anything related to my family's location managed through HomeKit. Abode, Arlo, and any other system will only know the current 'mode'.
 
-The system runs HassOS which has Home Assistant (hass.io) running as a docker image. We will use that same host to run Home Bridge as another docker image next to it. The main install instructions are [here](https://www.home-assistant.io/getting-started/).
+The each node is using [Raspberry Pi OS Lite](https://www.raspberrypi.org/software/operating-systems/) and [K3s](https://k3s.io).
 
-### HassOS
+## Hardware
 
-To access the host OS you need to add an `authorized_keys` files in the root of a USB drive. Instructions are [here](https://developers.home-assistant.io/docs/en/hassio_debugging.html#hassos-based-hassio).
+ - 4 x Raspberry Pi 4 (8GB)
+ - 1 x FreeAgent Go USB Drive (500GB)
+ - 1 x [Google Coral Accelerator](https://coral.ai)
+
+## Setup
+
+## OS
+
+ 1. Install Raspberry Pi OS Lite on each microSD card. (download)[https://www.raspberrypi.org/software/operating-systems/]
+ 1. In the microSD card root run the following to enable SSH.
+     ```$ touch ssh```
+ 1. Disable `wlan0`
+ 1. Set static IP on `eth0`
 
 ## Home Assistant
 
