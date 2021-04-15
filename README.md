@@ -22,7 +22,8 @@ The each node is using [Raspberry Pi OS Lite](https://www.raspberrypi.org/softwa
  1. Install microSD card on each Pi node.
  1. Boot all Pi nodes.
  1. Find and note DHCP provided IP addresses
-     - Rpi3: ```$ arp -na | grep -i b8:27:eb``` 
+     - Rpi3: ```$ arp -na | grep -i b8:27:eb```
+     - Rpi4: ```$ arp -na | grep -i 'dc:a6:32\|e4:5f:1'```
 
 ## OS
 
@@ -31,7 +32,7 @@ The each node is using [Raspberry Pi OS Lite](https://www.raspberrypi.org/softwa
     - ```$ brew install ssh-copy-id```
     - ```$ ssh-copy-id pi@x.x.x.x```
  1. Update OS packages
-     ```$ sudo apt update```
+     ```$ sudo apt-get update && sudo apt-get dist-upgrade -y```
  1. Disable `wlan0`
      ```$ sudo ifconfig wlan0 down```
  1. Set cmd items add the following line to `/boot/cmdline.txt`
@@ -43,12 +44,12 @@ The each node is using [Raspberry Pi OS Lite](https://www.raspberrypi.org/softwa
      fallback other     
      
      profile 192.168.1.1
-     static ip_address=192.168.1.100/24
+     static ip_address=192.168.1.x/24
      static routers=192.168.1.1
      static domain_name_servers=1.1.1.1
      
      profile other
-     static ip_address=192.168.1.100/24
+     static ip_address=192.168.1.x/24
      ```
  1. Change the hostname to `kube-*` by modifying:
    - `/etc/hosts`
@@ -56,13 +57,16 @@ The each node is using [Raspberry Pi OS Lite](https://www.raspberrypi.org/softwa
 
  1. Reboot `sudo reboot -n`
 
-### Primary Node
+### Server Node
 
  1. Install k3s
-     ```$ curl -sfL https://get.k3s.io | sh -```
+    ```$ curl -sfL https://get.k3s.io | sh -```
+ 1. Get NODE_TOKEN from `/var/lib/rancher/k3s/server/node-token`
 
 ### Worker Node
- 
+
+ 1. Install k3s
+    ```$ curl -sfL https://get.k3s.io | K3S_URL=https://myserver:6443 K3S_TOKEN=NODE_TOKEN sh -```
 
 ## Home Assistant
 
