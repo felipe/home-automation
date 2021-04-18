@@ -32,25 +32,30 @@ The each node is using [Raspberry Pi OS Lite](https://www.raspberrypi.org/softwa
     - ```$ brew install ssh-copy-id```
     - ```$ ssh-copy-id pi@x.x.x.x```
  1. Update OS packages
-     ```$ sudo apt-get update && sudo apt-get dist-upgrade -y```
- 1. Disable `wlan0`
+     ```
+     $ sudo apt-get update && sudo apt-get dist-upgrade -y
+     $ sudo apt-get install nfs-kernel-server
+     $ sudo systemctl enable nfs-server
+     ```
+ 1. Wifi is disabled by default, but if not disable `wlan0`
      ```$ sudo ifconfig wlan0 down```
  1. Set cmd items add the following line to `/boot/cmdline.txt`
     ```cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory```
  1. Set static IP on `eth0` by appending the correct code to `/etc/dhcpcd.conf`. Different IPs per node.
-     ```
-     interface eth0
-     arping 192.168.1.1
-     fallback other     
-     
-     profile 192.168.1.1
-     static ip_address=192.168.1.x/24
-     static routers=192.168.1.1
-     static domain_name_servers=1.1.1.1
-     
-     profile other
-     static ip_address=192.168.1.x/24
-     ```
+ 1. Disable swap ```sudo systemctl disable dphys-swapfile.service```
+```
+interface eth0
+arping 192.168.1.1
+fallback other     
+
+profile 192.168.1.1
+static ip_address=192.168.1.x/24
+static routers=192.168.1.1
+static domain_name_servers=1.1.1.1
+
+profile other
+static ip_address=192.168.1.x/24
+```
  1. Change the hostname to `kube-*` by modifying:
    - `/etc/hosts`
    - `/etc/hostname`
@@ -59,14 +64,51 @@ The each node is using [Raspberry Pi OS Lite](https://www.raspberrypi.org/softwa
 
 ### Server Node
 
+ 1. Setup NFS Volume
+   1. Get UUID of volume
+```
+sudo blkid
+```
+   1. Create Mount for the volume
+```
+mkdir /mnt/cluster
+```
+   1. Use that ID for a mount on `/etc/fstab`
+```
+UUID=x-x  /mnt/cluster  data defaults  0  0
+```
+   1. test it
+```
+sudo mount -a
+```
+   1. Create shared mount
+```
+mkdir -p /srv/nfs/kube-data
+sudo chmod -R 777 /srv/nfs
+```
+   1. Modify export by adding this line to `/etc/exports`
+```
+/srv/nfs/kube-data  *(anonuid=1000,anongid=1000,rw,sync,no_subtree_check,insecure)
+```
+   1. Export pages
+```
+sudo exportfs -rav
+```
+
  1. Install k3s
     ```$ curl -sfL https://get.k3s.io | sh -```
  1. Get NODE_TOKEN from `/var/lib/rancher/k3s/server/node-token`
 
-### Worker Node
+### Worker Nodes
 
  1. Install k3s
     ```$ curl -sfL https://get.k3s.io | K3S_URL=https://myserver:6443 K3S_TOKEN=NODE_TOKEN sh -```
+ 1. Copy `/etc/rancher/k3s/k3s.yaml` from the Server to the Clients
+
+## Install order
+
+ 1. `kubectl apply -f provisioning/kilo.yaml`
+ 1. `kubectl apply -f provisioning/adguard.yaml`
 
 ## Home Assistant
 
@@ -99,19 +141,7 @@ docker run \
 
 ## Homebridge
 
-Homebridge is set up through a [Docker Image](https://github.com/oznu/docker-homebridge/wiki/Homebridge-on-Raspberry-Pi).
-
-```
-docker run \
-  -d --restart unless-stopped \
-  --net=host \
-  --name=homebridge \
-  -e PUID=1000 -e PGID=1000 \
-  -e TZ=America/Denver \
-  -e HOMEBRIDGE_CONFIG_UI=1 \
-  -e HOMEBRIDGE_CONFIG_UI_PORT=8080 \
-  oznu/homebridge
-```
+Homebridge links devices that are not HomeKit enabled to Apple's Home App.
 
 **Normalizing Mode Names**
 
@@ -145,3 +175,12 @@ docker run \
   -v ~/mqtt/data/:/mqtt/data/ \
   toke/mosquitto
 ```
+
+
+## WIP: Plans
+
+NFS - https://vitux.com/debian_nfs_server/
+DynDNS - https://github.com/timothymiller/cloudflare-ddns
+OpenFAAS - https://www.shogan.co.uk/kubernetes/raspberry-pi-kubernetes-cluster-with-openfaas-for-serverless-functions-part-4/
+WireGuard + AdGuard - https://codingcoffee.dev/blog/wireguard_on_kubernetes_with_adblocking/
+Bash into pod-- kubectl exec -it homebridge-6b455f4bb8-bs2wd -n homebridge -- /bin/sh

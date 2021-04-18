@@ -1,0 +1,128 @@
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: adguard
+  labels:
+    name: adguard
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: adguard-config-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  nfs:
+    path: /srv/nfs/kube-data/adguard/config
+    server: 192.168.1.100
+    readOnly: false
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: adguard-logs-pv
+  namespace: adguard
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  nfs:
+    path: /srv/nfs/kube-data/adguard/logs
+    server: 192.168.1.100
+    readOnly: false
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adguard
+  namespace: adguard
+spec:
+  selector:
+    matchLabels:
+      app: adguard
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 0
+  template:
+    metadata:
+      labels:
+        app: adguard
+    spec:
+      volumes:
+        # - name: tls-cert-secret
+        #   secret:
+        #     secretName: production-tls-cert
+        - name: adguard-config
+          hostPath:
+            path: "/"
+            type: DirectoryOrCreate
+        - name: adguard-logs
+          hostPath:
+            path: "/work"
+            type: DirectoryOrCreate
+      containers:
+        - name: adguard
+          image: adguard/adguardhome:latest
+          ports:
+            # Regular DNS Port
+            - containerPort: 53
+              hostPort: 53
+              protocol: UDP
+            - containerPort: 53
+              hostPort: 53
+              protocol: TCP
+            # DNS over TLS
+            - containerPort: 853
+              hostPort: 853
+              protocol: TCP
+          volumeMounts:
+            # - name: tls-cert-secret
+            #   mountPath: /certs
+            - name: adguard-config
+              mountPath: /opt/adguard/conf
+            - name: adguard-logs
+              mountPath: /opt/adguard/work
+      terminationGracePeriodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: adguard
+  namespace: adguard
+  labels:
+    app: adguard
+spec:
+  type: ClusterIP
+  selector:
+    app: adguard
+  ports:
+  - port: 80
+    targetPort: 3000
+    protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: adguard
+  namespace: adguard
+  annotations:
+    kubernetes.io/ingress.class: "traefik"
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /adguard
+        pathType: Prefix
+        backend:
+          service:
+            name: adguard
+            port:
+              number: 3000
