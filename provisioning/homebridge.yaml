@@ -60,7 +60,7 @@ spec:
             claimName: homebridge-vc
       containers:
       - name: homebridge
-        image: oznu/homebridge:latest
+        image: oznu/homebridge:3.1.0
         ports:
           - containerPort: 8581
           - containerPort: 51874
@@ -75,6 +75,8 @@ spec:
           value: "1"
         - name: HOMEBRIDGE_CONFIG_UI_PORT
           value: "8581"
+        - name: NODE_VERSION
+          value: "12.16.3"
         volumeMounts:
           - mountPath: "/homebridge"
             name: homebridge-vc
