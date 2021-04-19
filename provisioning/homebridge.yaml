@@ -18,8 +18,8 @@ spec:
   accessModes:
     - ReadWriteOnce
   nfs:
-    path: /srv/nfs/kube-data/homebridge
-    server: 192.168.1.100
+    path: /mnt/cluster/kube-data/homebridge
+    server: 192.168.1.2
     readOnly: false
 ---
 apiVersion: v1
@@ -53,7 +53,7 @@ spec:
         app: homebridge
         tier: frontend
     spec:
-      hostNetwork: true
+      # hostNetwork: true
       volumes:
          - name: homebridge-vc
            persistentVolumeClaim:
@@ -63,7 +63,7 @@ spec:
         image: oznu/homebridge:3.1.0
         ports:
           - containerPort: 8581
-          - containerPort: 51874
+          - containerPort: 51416
         env:
         - name: TZ
           value: "America/Denver"
@@ -86,12 +86,12 @@ metadata:
   name: homebridge
   namespace: homebridge
 spec:
-  type: LoadBalancer
   selector:
     app: homebridge
     tier: frontend
   ports:
-    - port: 8581
+    - protocol: TCP
+      port: 8581
 ---
 apiVersion: v1
 kind: Service
@@ -104,7 +104,7 @@ spec:
     tier: frontend
   ports:
     - protocol: TCP
-      port: 51874
+      port: 51416
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -113,7 +113,7 @@ metadata:
   namespace: homebridge
   annotations:
     kubernetes.io/ingress.class: "traefik"
-    traefik.ingress.kubernetes.io/redirect-replacement: "^http://192.168.1.43:8581"
+#    traefik.ingress.kubernetes.io/redirect-replacement: "^http://192.168.1.100:8581"
 spec:
   rules:
   - http:

@@ -34,15 +34,13 @@ The each node is using [Raspberry Pi OS Lite](https://www.raspberrypi.org/softwa
  1. Update OS packages
      ```
      $ sudo apt-get update && sudo apt-get dist-upgrade -y
-     $ sudo apt-get install nfs-kernel-server
-     $ sudo systemctl enable nfs-server
      ```
  1. Wifi is disabled by default, but if not disable `wlan0`
      ```$ sudo ifconfig wlan0 down```
  1. Set cmd items add the following line to `/boot/cmdline.txt`
     ```cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory```
- 1. Set static IP on `eth0` by appending the correct code to `/etc/dhcpcd.conf`. Different IPs per node.
  1. Disable swap ```sudo systemctl disable dphys-swapfile.service```
+ 1. Set static IP on `eth0` by appending the correct code to `/etc/dhcpcd.conf`. Different IPs per node.
 ```
 interface eth0
 arping 192.168.1.1
@@ -65,6 +63,12 @@ static ip_address=192.168.1.x/24
 ### Server Node
 
  1. Setup NFS Volume
+ 
+   1. Update OS packages
+```
+$ sudo apt-get install nfs-kernel-server
+$ sudo systemctl enable nfs-server
+```
    1. Get UUID of volume
 ```
 sudo blkid
@@ -75,7 +79,7 @@ mkdir /mnt/cluster
 ```
    1. Use that ID for a mount on `/etc/fstab`
 ```
-UUID=x-x  /mnt/cluster  data defaults  0  0
+PARTUUID=x-x-x-x-x   /mnt/cluster    ext4    auto,nofail,rw,noatime,user     0       0
 ```
    1. test it
 ```
@@ -83,16 +87,23 @@ sudo mount -a
 ```
    1. Create shared mount
 ```
-mkdir -p /srv/nfs/kube-data
-sudo chmod -R 777 /srv/nfs
+mkdir -p /mnt/cluster/kube-data
+mkdir chmod 777 /mnt/cluster/kube-data
 ```
    1. Modify export by adding this line to `/etc/exports`
 ```
-/srv/nfs/kube-data  *(anonuid=1000,anongid=1000,rw,sync,no_subtree_check,insecure)
+/mnt/cluster/kube-data *(rw,all_squash,insecure,async,no_subtree_check,anonuid=1000,anongid=1000)
 ```
    1. Export pages
 ```
 sudo exportfs -rav
+sudo rm /lib/systemd/system/nfs-common.service
+sudo systemctl enable rpcbind
+sudo systemctl enable nfs-kernel-server
+sudo systemctl enable nfs-common
+sudo systemctl start rpcbind
+sudo systemctl start nfs-kernel-server
+sudo systemctl start nfs-common
 ```
 
  1. Install k3s
@@ -183,4 +194,12 @@ NFS - https://vitux.com/debian_nfs_server/
 DynDNS - https://github.com/timothymiller/cloudflare-ddns
 OpenFAAS - https://www.shogan.co.uk/kubernetes/raspberry-pi-kubernetes-cluster-with-openfaas-for-serverless-functions-part-4/
 WireGuard + AdGuard - https://codingcoffee.dev/blog/wireguard_on_kubernetes_with_adblocking/
-Bash into pod-- kubectl exec -it homebridge-6b455f4bb8-bs2wd -n homebridge -- /bin/sh
+Traefik & K3s - https://levelup.gitconnected.com/a-guide-to-k3s-ingress-using-traefik-with-nodeport-6eb29add0b4b
+
+### Cheats
+
+Reboot pod-- kubectl rollout restart deployment -n homebridge homebridge
+Bash into pod -- kubectl exec -it homebridge-6b455f4bb8-bs2wd -n homebridge -- /bin/sh
+Proxy into Pod -- kubectl -n homebridge port-forward deployment/homebridge 8080:8581
+kubectl -n kube-system port-forward deployment/traefik 8080  // Traefik Dashboard
+
