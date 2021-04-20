@@ -173,6 +173,18 @@ Enables accessing the system modes. Currently there is no way to create new mode
 
 Enables accessing modes other than `Armed` and `Disarmed`. I have created a `Home` mode (which in the Homekit API is also referred to as `stay`), and a `Night` mode.
 
+## K8s Dashboard
+
+Kubernetes provides a dashboard to keep tabs on the system, in order to install it run the following commands.
+
+ 1. `kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.0/aio/deploy/recommended.yaml`
+ 1. `kubectl apply -f provisioning/dashboard-adminuser.yaml `
+ 1. `kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep admin-user | awk '{print $1}')`
+ 1. `kube proxy`
+ 1. visit: `http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/#/login`
+ 
+More at: https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/
+
 ## WIP: Mosquitto
 
 ```
