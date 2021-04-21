@@ -14,7 +14,7 @@ The each node is using [Raspberry Pi OS Lite](https://www.raspberrypi.org/softwa
 
 ## Setup
 
-## microSD Card
+### microSD Card
 
  1. Install Raspberry Pi OS Lite on each card. [download](https://www.raspberrypi.org/software/operating-systems/)
  1. In the card root directory run the following to enable SSH.
@@ -25,7 +25,7 @@ The each node is using [Raspberry Pi OS Lite](https://www.raspberrypi.org/softwa
      - Rpi3: ```$ arp -na | grep -i b8:27:eb```
      - Rpi4: ```$ arp -na | grep -i 'dc:a6:32\|e4:5f:1'```
 
-## OS
+### OS
 
  1. Update the `nodes` file with the IP addresses of each
  1. Copy keys for password-less ssh
@@ -40,6 +40,14 @@ The each node is using [Raspberry Pi OS Lite](https://www.raspberrypi.org/softwa
  1. Set cmd items add the following line to `/boot/cmdline.txt`
     ```cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory```
  1. Disable swap ```sudo systemctl disable dphys-swapfile.service```
+ 1. Disable logs - The original configuration corrupted the SD card due to some power failures and too many writes. I have moved the log configuration to memory, which will clear on reboot, but should be fine.
+
+ ```
+ vi /etc/fstab
+ tmpfs  /tmp tmpfs  defaults,noatime 0  0
+ tmpfs  /var/log tmpfs  defaults,noatime,nosuid,mode=0755,size=100m  0  0
+ ```
+
  1. Set static IP on `eth0` by appending the correct code to `/etc/dhcpcd.conf`. Different IPs per node.
 ```
 interface eth0
@@ -60,7 +68,7 @@ static ip_address=192.168.1.x/24
 
  1. Reboot `sudo reboot -n`
 
-### Server Node
+#### Server Node
 
  1. Setup NFS Volume
  
@@ -110,49 +118,22 @@ sudo systemctl start nfs-common
     ```$ curl -sfL https://get.k3s.io | sh -```
  1. Get NODE_TOKEN from `/var/lib/rancher/k3s/server/node-token`
 
-### Worker Nodes
+#### Worker Nodes
 
  1. Install k3s
     ```$ curl -sfL https://get.k3s.io | K3S_URL=https://myserver:6443 K3S_TOKEN=NODE_TOKEN sh -```
  1. Copy `/etc/rancher/k3s/k3s.yaml` from the Server to the Clients
 
-## Install order
+
+## Configuration
+
+### Pod Install order
 
  1. `kubectl apply -f provisioning/kilo.yaml`
  1. `kubectl apply -f provisioning/adguard.yaml`
+ 1. `kubectl apply -f provisioning/homebridge.yaml`
 
-## Home Assistant
-
-### Service Logs
-
-The original configuration corrupted the SD card due to some power failures and too many writes. I have moved the log configuration to memory, which will clear on reboot, but should be fine. This is done inside the hassio docker image and in the host system (if possible).
-
-```
-vi /etc/fstab
-tmpfs  /tmp tmpfs  defaults,noatime 0  0
-tmpfs  /var/log tmpfs  defaults,noatime,nosuid,mode=0755,size=100m  0  0
-```
-
-### Device Metric Logs
-
-Device metrics are sent to DataDog for reporting and alerting. DataDog is set up through a [DockerImage](https://github.com/BenevolentCoders/rpi-datadog-agent).
-
-```
-docker run \
-  -d --restart unless-stopped \
-  --name dd-agent \
-  --net=host \
-  -h 'hostname' \
-  -v /var/run/docker.sock:/var/run/docker.sock:ro \
-  -v /proc/:/host/proc/:ro \
-  -v /sys/fs/cgroup/:/host/sys/fs/cgroup:ro \
-  -e API_KEY=DATADOG_API_KEY \
-  benevolentcoders/rpi-datadog-agent
-```
-
-## Homebridge
-
-Homebridge links devices that are not HomeKit enabled to Apple's Home App.
+### Modes
 
 **Normalizing Mode Names**
 
@@ -165,15 +146,21 @@ Off         | Standby      | Disarmed
 
 _Items in italics are the current mapping, but it can be changed_
 
-### Abode
+## Pods
+
+### Homebridge
+
+Homebridge links devices that are not HomeKit enabled to Apple's Home App.
+
+#### Service: Abode
 
 Enables accessing the system modes. Currently there is no way to create new modes in Abode, so `Night` mode is the same as `Home` Mode.
 
-### Arlo
+#### Service: Arlo
 
 Enables accessing modes other than `Armed` and `Disarmed`. I have created a `Home` mode (which in the Homekit API is also referred to as `stay`), and a `Night` mode.
 
-## K8s Dashboard
+### K8s Dashboard
 
 Kubernetes provides a dashboard to keep tabs on the system, in order to install it run the following commands.
 
@@ -185,28 +172,29 @@ Kubernetes provides a dashboard to keep tabs on the system, in order to install 
  
 More at: https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/
 
-## WIP: Mosquitto
+### Frigate NRV
 
-```
-docker run \
-  --restart=always \
-  --name=mqtt \
-  --net=host \
-  -tid \
-  -v ~/mqtt/config:/mqtt/config:ro \
-  -v ~/mqtt/log:/mqtt/log \
-  -v ~/mqtt/data/:/mqtt/data/ \
-  toke/mosquitto
-```
+[Frigate](https://github.com/blakeblackshear/frigate) records all interactions where there are humans in the video feeds. This is done by getting the Arlo video feed with the [Python Arlo API](https://github.com/jeffreydwalter/arlo/wiki/Streaming-Video), urls are generated with OpenFAAS functions.
 
+### AdGuard
 
-## WIP: Plans
+Runs DHCP and DNS filtering. 
+
+### WireGuard
+
+Provides a VPN layer
+
+## Future Plans or Resources
 
 NFS - https://vitux.com/debian_nfs_server/
 DynDNS - https://github.com/timothymiller/cloudflare-ddns
 OpenFAAS - https://www.shogan.co.uk/kubernetes/raspberry-pi-kubernetes-cluster-with-openfaas-for-serverless-functions-part-4/
 WireGuard + AdGuard - https://codingcoffee.dev/blog/wireguard_on_kubernetes_with_adblocking/
 Traefik & K3s - https://levelup.gitconnected.com/a-guide-to-k3s-ingress-using-traefik-with-nodeport-6eb29add0b4b
+PiHole - https://greg.jeanmart.me/2020/04/13/self-host-pi-hole-on-kubernetes-and-block-ad/
+Ports - https://www.bmc.com/blogs/kubernetes-port-targetport-nodeport/
+DHCP - https://github.com/npflan/dhcp
+DHCP - https://stackoverflow.com/questions/55184317/deploying-a-dhcpd-server
 
 ### Cheats
 

@@ -5,42 +5,73 @@ metadata:
   labels:
     name: adguard
 ---
-apiVersion: v1
 kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: adguard-logs-pv
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 3Gi
+  accessModes:
+    - ReadWriteOnce
+  nfs:
+    path: /mnt/cluster/kube-data/adguard/logs
+    server: 192.168.1.2
+    readOnly: false
+---
+kind: PersistentVolume
+apiVersion: v1
 metadata:
   name: adguard-config-pv
+  labels:
+    type: local
 spec:
+  storageClassName: manual
   capacity:
     storage: 1Gi
   accessModes:
-    - ReadWriteMany
-  persistentVolumeReclaimPolicy: Retain
+    - ReadWriteOnce
   nfs:
-    path: /srv/nfs/kube-data/adguard/config
-    server: 192.168.1.100
+    path: /mnt/cluster/kube-data/adguard/config
+    server: 192.168.1.2
     readOnly: false
 ---
 apiVersion: v1
-kind: PersistentVolume
+kind: PersistentVolumeClaim
 metadata:
-  name: adguard-logs-pv
+  name: adguard-logs-vc
   namespace: adguard
 spec:
-  capacity:
-    storage: 1Gi
+  storageClassName: manual
   accessModes:
-    - ReadWriteMany
-  persistentVolumeReclaimPolicy: Retain
-  nfs:
-    path: /srv/nfs/kube-data/adguard/logs
-    server: 192.168.1.100
-    readOnly: false
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 3Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: adguard-config-vc
+  namespace: adguard
+spec:
+  storageClassName: manual
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: adguard
   namespace: adguard
+# status:
+#   qosClass: Guaranteed
 spec:
   selector:
     matchLabels:
@@ -55,32 +86,65 @@ spec:
     metadata:
       labels:
         app: adguard
+      name: adguard
+      namespace: adguard
     spec:
+      # nodeName: kube-0
+      hostNetwork: true
+      # privileged: true
       volumes:
         # - name: tls-cert-secret
         #   secret:
         #     secretName: production-tls-cert
-        - name: adguard-config
-          hostPath:
-            path: "/"
-            type: DirectoryOrCreate
+        - name: adguard-config 
+          persistentVolumeClaim:
+            claimName: adguard-config-vc
+          # hostPath:
+          #   path: "/"
+          #   type: DirectoryOrCreate
         - name: adguard-logs
-          hostPath:
-            path: "/work"
-            type: DirectoryOrCreate
+          persistentVolumeClaim:
+            claimName: adguard-logs-vc
+          # hostPath:
+          #   path: "/work"
+          #   type: DirectoryOrCreate
       containers:
         - name: adguard
           image: adguard/adguardhome:latest
           ports:
+            - containerPort: 8080
+              name: ui
+              hostPort: 8080
+              protocol: TCP
+            # DHCP Server
+            - containerPort: 67
+              name: dhcp3
+              hostPort: 67
+              protocol: UDP
+            - containerPort: 68
+              name: dhcp1
+              hostPort: 68
+              protocol: TCP
+            - containerPort: 68
+              name: dhcp2
+              hostPort: 68
+              protocol: UDP
+            # DNS-over-HTTPS
+            # - containerPort: 443
+            #   hostPort: 443
+            #   protocol: TCP
             # Regular DNS Port
             - containerPort: 53
+              name: dns1
               hostPort: 53
               protocol: UDP
             - containerPort: 53
+              name: dns2
               hostPort: 53
               protocol: TCP
             # DNS over TLS
             - containerPort: 853
+              name: dns3
               hostPort: 853
               protocol: TCP
           volumeMounts:
@@ -97,16 +161,46 @@ kind: Service
 metadata:
   name: adguard
   namespace: adguard
-  labels:
-    app: adguard
 spec:
-  type: ClusterIP
   selector:
     app: adguard
   ports:
-  - port: 80
+  - name: adguard-ui
+    port: 8080
+    targetPort: 8080
+    protocol:   TCP
+  - name: adguard-config
+    port: 3000
     targetPort: 3000
+    protocol:   TCP
+  - name: adguard-dns1
+    port: 53
+    targetPort: 53
     protocol: TCP
+  - name: adguard-dns2
+    port: 53
+    targetPort: 53
+    protocol: UDP
+  - name: adguard-dns3
+    port: 853
+    targetPort: 853
+    protocol: TCP
+  - name: adguard-dhcp1
+    port: 68
+    targetPort: 68
+    protocol: TCP
+  - name: adguard-dhcp2
+    port: 68
+    targetPort: 68
+    protocol: UDP
+  - name: adguard-dhcp3
+    port: 67
+    targetPort: 67
+    protocol: UDP
+  externalIPs:
+  - 192.168.1.2
+  selector:
+    app: adguard
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -125,4 +219,4 @@ spec:
           service:
             name: adguard
             port:
-              number: 3000
+              number: 8080
