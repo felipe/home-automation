@@ -112,10 +112,6 @@ spec:
         - name: adguard
           image: adguard/adguardhome:latest
           ports:
-            - containerPort: 8080
-              name: ui
-              hostPort: 8080
-              protocol: TCP
             # DHCP Server
             - containerPort: 67
               name: dhcp3
@@ -151,9 +147,9 @@ spec:
             # - name: tls-cert-secret
             #   mountPath: /certs
             - name: adguard-config
-              mountPath: /opt/adguard/conf
+              mountPath: /opt/adguardhome/conf
             - name: adguard-logs
-              mountPath: /opt/adguard/work
+              mountPath: /opt/adguardhome/work
       terminationGracePeriodSeconds: 20
 ---
 apiVersion: v1
