@@ -30,7 +30,7 @@ metadata:
 spec:
   storageClassName: manual
   accessModes:
-  - ReadWriteOnce
+    - ReadWriteOnce
   resources:
     requests:
       storage: 1Gi
@@ -48,10 +48,7 @@ spec:
       app: homebridge
   replicas: 1
   strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 1
-      maxSurge: 0
+    type: Recreate
   template:
     metadata:
       labels:
@@ -60,29 +57,29 @@ spec:
     spec:
       hostNetwork: true
       containers:
-      - name: homebridge
-        image: oznu/homebridge
-        ports:
-          - containerPort: 8581
-          - containerPort: 51416
-        env:
-        - name: TZ
-          value: "America/Denver"
-        - name: PGID
-          value: "1000"
-        - name: PUID
-          value: "1000"
-        - name: HOMEBRIDGE_CONFIG_UI
-          value: "1"
-        - name: HOMEBRIDGE_CONFIG_UI_PORT
-          value: "8581"
-        volumeMounts:
-          - name: homebridge-vc
-            mountPath: /homebridge
+        - name: homebridge
+          image: oznu/homebridge
+          ports:
+            - containerPort: 8581
+            - containerPort: 51416
+          env:
+            - name: TZ
+              value: "America/Denver"
+            - name: PGID
+              value: "1000"
+            - name: PUID
+              value: "1000"
+            - name: HOMEBRIDGE_CONFIG_UI
+              value: "1"
+            - name: HOMEBRIDGE_CONFIG_UI_PORT
+              value: "8581"
+          volumeMounts:
+            - name: homebridge-vc
+              mountPath: /homebridge
       volumes:
-      - name: homebridge-vc
-        persistentVolumeClaim:
-          claimName: homebridge-vc
+        - name: homebridge-vc
+          persistentVolumeClaim:
+            claimName: homebridge-vc
       restartPolicy: Always
 ---
 apiVersion: v1
