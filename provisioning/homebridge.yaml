@@ -58,7 +58,7 @@ spec:
       hostNetwork: true
       containers:
         - name: homebridge
-          image: oznu/homebridge
+          image: oznu/homebridge:latest
           ports:
             - containerPort: 8581
             - containerPort: 51416
